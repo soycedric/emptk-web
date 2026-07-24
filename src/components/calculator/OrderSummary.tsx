@@ -10,7 +10,7 @@ import { Package, Truck, MessageCircle, Lightbulb, Trash2 } from 'lucide-react';
 import { OrderItemsList } from '@/components/calculator/OrderItemsList';
 import type { CalculatorDensity } from '@/components/calculator/types';
 import { isCompactDensity } from '@/components/calculator/types';
-import type { OrderItemWithId } from '@/hooks/use-order-calculator';
+import type { OrderItemWithId } from '@/contexts/OrderContext';
 import type { ValidationResult, Product } from '@/types/order';
 
 type DeliveryZone = 'puebla' | 'cdmx';
@@ -26,7 +26,6 @@ interface OrderSummaryProps {
   deliveryZone: DeliveryZone;
   deliveryMethod: DeliveryMethod;
   pickupPoint: string;
-  deliveryDate: string;
   deliveryLocation: string;
   customerName: string;
   customerPhone: string;
@@ -36,6 +35,7 @@ interface OrderSummaryProps {
   onUpdateQuantity: (itemId: string, quantity: number) => void;
   onRemoveItem: (itemId: string) => void;
   onClearOrder: () => void;
+  isLocked?: boolean;
 }
 
 /**
@@ -75,7 +75,6 @@ export const OrderSummary = ({
   deliveryZone,
   deliveryMethod,
   pickupPoint,
-  deliveryDate,
   deliveryLocation,
   customerName,
   customerPhone,
@@ -85,14 +84,14 @@ export const OrderSummary = ({
   onUpdateQuantity,
   onRemoveItem,
   onClearOrder,
+  isLocked = false,
 }: OrderSummaryProps) => {
   const isPickup = deliveryZone === 'cdmx' || deliveryMethod === 'pickup';
   const compact = isCompactDensity(density);
-  const hasPickupInfo = pickupPoint.trim().length > 0;
+  const hasPickupInfo = deliveryZone === 'puebla' || pickupPoint.trim().length > 0;
   const hasDeliveryLocation = deliveryLocation.trim().length > 0;
   const hasContact = customerName.trim().length > 0 && customerPhone.trim().length > 0;
-  const hasDate = deliveryDate.trim().length > 0;
-  const canSubmit = hasContact && hasDate && (isPickup ? hasPickupInfo : hasDeliveryLocation);
+  const canSubmit = hasContact && (isPickup ? hasPickupInfo : hasDeliveryLocation);
   const remainingToFree = Math.max(0, freeShippingThreshold - subtotal);
   const suggestionToFree = useMemo(() => {
     if (isPickup || items.length === 0 || remainingToFree <= 0) return null;
@@ -111,7 +110,7 @@ export const OrderSummary = ({
           : items.length === 0
             ? ''
             : 'bg-orange-50 dark:bg-orange-950/30'
-          }`}
+        }`}
       >
         <div className={compact ? "space-y-4" : "space-y-6"}>
           {/* Header: Tu Pedido */}
@@ -186,9 +185,10 @@ export const OrderSummary = ({
               </span>
               <span className={compact ? "text-base font-display text-muted-foreground" : "text-2xl font-display text-muted-foreground"}>MXN</span>
             </div>
+
             <div className={compact ? "mt-2 space-y-1 text-sm" : "mt-4 space-y-1 text-sm"}>
               <p>Envio: ${shippingCost.toFixed(0)} MXN</p>
-              <p className="font-bold">Total: ${totalWithShipping.toFixed(0)} MXN</p>
+              <p className="font-bold">Total a pagar: ${totalWithShipping.toFixed(0)} MXN</p>
             </div>
           </div>
 
@@ -223,7 +223,7 @@ export const OrderSummary = ({
                 )}
               </div>
 
-            {/* Celebration when minimum reached */}
+              {/* Celebration when minimum reached */}
               {validation.isValid && !compact && (
                 <motion.div
                   initial={{ opacity: 0, scale: 0.8 }}
@@ -253,7 +253,6 @@ export const OrderSummary = ({
           )}
 
           {/* Sugerencias inteligentes */}
-
           {suggestionToFree && (
             <motion.div
               initial={{ opacity: 0, y: 10 }}
@@ -287,12 +286,6 @@ export const OrderSummary = ({
             </div>
           )}
 
-          {hasDate && (
-            <div className={compact ? "text-sm text-muted-foreground" : "p-3 border-2 border-foreground/40 bg-foreground/5 text-sm"}>
-              <span className="font-bold">📅 Fecha:</span> {deliveryDate}
-            </div>
-          )}
-
           {!isPickup && hasDeliveryLocation && (
             <div className={compact ? "text-sm text-muted-foreground" : "p-3 border-2 border-foreground/40 bg-foreground/5 text-sm"}>
               <span className="font-bold">Ubicacion:</span> {deliveryLocation}
@@ -316,29 +309,29 @@ export const OrderSummary = ({
                 {isPickup ? '¡LISTO PARA RECOGER!' : '¡LISTO PARA ENVIAR!'}
               </h3>
               <p className={compact ? "text-xs text-muted-foreground" : "text-sm text-muted-foreground"}>
-                {isPickup
-                  ? 'Coméntanos el punto de entrega de tu pedido.'
-                  : subtotal >= freeShippingThreshold
-                    ? 'Tu pedido califica para envio gratis'
-                    : `Envio con costo de $${shippingCost.toFixed(0)} MXN`}
+                Envía tu pedido por WhatsApp y coordinamos el pago.
               </p>
             </div>
-            <Button
-              className={compact
-                ? "w-full font-display text-sm py-4 bg-green-600 hover:bg-green-700 border-2 border-foreground"
-                : "w-full font-display text-base py-6 bg-green-600 hover:bg-green-700 border-4 border-foreground shadow-brutal hover:shadow-brutal-hover active:shadow-none transition-all"
-              }
-              size="lg"
-              onClick={onCalculate}
-            >
-              <MessageCircle className={compact ? "w-4 h-4 mr-2" : "w-5 h-5 mr-2"} />
-              ENVIAR PEDIDO AHORA
-            </Button>
-            {!compact && (
-              <p className="text-xs text-muted-foreground text-center mt-3">
-                El ticket se entrega en WhatsApp y el seguimiento se hace por ahi.
-              </p>
-            )}
+
+            <div className={`transition-opacity ${isLocked ? 'opacity-100' : 'opacity-50 pointer-events-none'}`}>
+              <Button
+                className={compact
+                  ? "w-full font-display text-sm py-4 bg-green-600 hover:bg-green-700 border-2 border-foreground"
+                  : "w-full font-display text-base py-6 bg-green-600 hover:bg-green-700 border-4 border-foreground shadow-brutal hover:shadow-brutal-hover active:shadow-none transition-all"
+                }
+                size="lg"
+                onClick={onCalculate}
+                disabled={!canSubmit || !validation.isValid}
+              >
+                <MessageCircle className={compact ? "w-4 h-4 mr-2" : "w-5 h-5 mr-2"} />
+                ENVIAR PEDIDO POR WHATSAPP
+              </Button>
+              {!compact && (
+                <p className="text-xs text-muted-foreground text-center mt-3">
+                  El ticket se envía por WhatsApp y coordinamos el pago al recibir.
+                </p>
+              )}
+            </div>
           </div>
         </motion.div>
       )}

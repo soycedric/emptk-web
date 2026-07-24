@@ -4,6 +4,7 @@
  * Ahora usa OrderContext para estado compartido con ProductsSection y FloatingCart.
  */
 
+import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { toast } from 'sonner';
 import { useOrderContext } from '@/contexts/OrderContext';
@@ -60,8 +61,6 @@ export const OrderCalculator = ({
     setCustomerPhone,
     pickupPoint,
     setPickupPoint,
-    deliveryDate,
-    setDeliveryDate,
     deliveryLocationLink,
     setDeliveryLocationLink,
     addItem,
@@ -70,6 +69,7 @@ export const OrderCalculator = ({
     clearOrder
   } = useOrderContext();
   const { handleCalculate } = useOrderSubmit();
+  const [isLocked, setIsLocked] = useState(false);
 
   const handleAddProduct = (productId: string) => {
     const product = getProductById(productId);
@@ -114,17 +114,18 @@ export const OrderCalculator = ({
             customerName={customerName}
             customerPhone={customerPhone}
             pickupPoint={pickupPoint}
-            deliveryDate={deliveryDate}
             deliveryLocationLink={deliveryLocationLink}
             onZoneChange={setDeliveryZone}
             onMethodChange={setDeliveryMethod}
             onCustomerNameChange={setCustomerName}
             onCustomerPhoneChange={setCustomerPhone}
             onPickupPointChange={setPickupPoint}
-            onDeliveryDateChange={setDeliveryDate}
             onDeliveryLocationChange={setDeliveryLocationLink}
             onAddProduct={handleAddProduct}
             density={density}
+            isLocked={isLocked}
+            setIsLocked={setIsLocked}
+            canSubmit={validation.isValid}
           />
           {showSummary && (
             <OrderSummary
@@ -137,7 +138,6 @@ export const OrderCalculator = ({
               deliveryZone={deliveryZone}
               deliveryMethod={deliveryMethod}
               pickupPoint={pickupPoint}
-              deliveryDate={deliveryDate}
               deliveryLocation={deliveryLocationLink}
               customerName={customerName}
               customerPhone={customerPhone}
@@ -147,6 +147,7 @@ export const OrderCalculator = ({
               onRemoveItem={removeItem}
               onClearOrder={clearOrder}
               density={density}
+              isLocked={isLocked}
             />
           )}
         </div>
@@ -161,17 +162,19 @@ export const OrderCalculator = ({
               customerName={customerName}
               customerPhone={customerPhone}
               pickupPoint={pickupPoint}
-              deliveryDate={deliveryDate}
               deliveryLocationLink={deliveryLocationLink}
               onZoneChange={setDeliveryZone}
               onMethodChange={setDeliveryMethod}
               onCustomerNameChange={setCustomerName}
               onCustomerPhoneChange={setCustomerPhone}
               onPickupPointChange={setPickupPoint}
-              onDeliveryDateChange={setDeliveryDate}
               onDeliveryLocationChange={setDeliveryLocationLink}
               onAddProduct={handleAddProduct}
               density={density}
+              isLocked={isLocked}
+              setIsLocked={setIsLocked}
+              onSaveDraft={handleSaveDraft}
+              canSubmit={validation.isValid}
             />
           </div>
 
@@ -187,7 +190,6 @@ export const OrderCalculator = ({
               deliveryZone={deliveryZone}
               deliveryMethod={deliveryMethod}
               pickupPoint={pickupPoint}
-              deliveryDate={deliveryDate}
               deliveryLocation={deliveryLocationLink}
               customerName={customerName}
               customerPhone={customerPhone}
@@ -197,6 +199,7 @@ export const OrderCalculator = ({
               onRemoveItem={removeItem}
               onClearOrder={clearOrder}
               density={density}
+              isLocked={isLocked}
             />
           )}
         </div>

@@ -15,6 +15,8 @@ export interface OrderItemWithId extends OrderItem {
     id: string;
 }
 
+
+
 interface OrderContextValue {
     items: OrderItemWithId[];
     products: ReturnType<typeof getAllProducts>;
@@ -30,7 +32,6 @@ interface OrderContextValue {
     customerName: string;
     customerPhone: string;
     pickupPoint: string;
-    deliveryDate: string;
     deliveryLocationLink: string;
     isCartOpen: boolean;
     setDeliveryZone: (zone: DeliveryZone) => void;
@@ -38,7 +39,6 @@ interface OrderContextValue {
     setCustomerName: (name: string) => void;
     setCustomerPhone: (phone: string) => void;
     setPickupPoint: (point: string) => void;
-    setDeliveryDate: (date: string) => void;
     setDeliveryLocationLink: (location: string) => void;
     setCartOpen: (open: boolean) => void;
     addItem: (productId: string, quantity?: number) => void;
@@ -55,15 +55,33 @@ export const useOrderContext = () => {
     return ctx;
 };
 
+const CART_STORAGE_KEY = 'empatika_cart_data';
+
 export const OrderProvider = ({ children }: { children: ReactNode }) => {
-    const [items, setItems] = useState<OrderItemWithId[]>([]);
-    const [deliveryZone, setDeliveryZone] = useState<DeliveryZone>('puebla');
-    const [deliveryMethod, setDeliveryMethodState] = useState<DeliveryMethod>('delivery');
-    const [customerName, setCustomerName] = useState<string>('');
-    const [customerPhone, setCustomerPhone] = useState<string>('');
-    const [pickupPoint, setPickupPoint] = useState<string>('');
-    const [deliveryDate, setDeliveryDate] = useState<string>('');
-    const [deliveryLocationLink, setDeliveryLocationLink] = useState<string>('');
+    const getInitialState = <T,>(key: string, defaultValue: T): T => {
+        try {
+            if (typeof window !== 'undefined') {
+                const stored = localStorage.getItem(CART_STORAGE_KEY);
+                if (stored) {
+                    const parsed = JSON.parse(stored);
+                    if (parsed[key] !== undefined) {
+                        return parsed[key] as T;
+                    }
+                }
+            }
+        } catch (e) {
+            console.warn('Could not read from localStorage', e);
+        }
+        return defaultValue;
+    };
+
+    const [items, setItems] = useState<OrderItemWithId[]>(() => getInitialState('items', []));
+    const [deliveryZone, setDeliveryZone] = useState<DeliveryZone>(() => getInitialState('deliveryZone', 'puebla'));
+    const [deliveryMethod, setDeliveryMethodState] = useState<DeliveryMethod>(() => getInitialState('deliveryMethod', 'delivery'));
+    const [customerName, setCustomerName] = useState<string>(() => getInitialState('customerName', ''));
+    const [customerPhone, setCustomerPhone] = useState<string>(() => getInitialState('customerPhone', ''));
+    const [pickupPoint, setPickupPoint] = useState<string>(() => getInitialState('pickupPoint', ''));
+    const [deliveryLocationLink, setDeliveryLocationLink] = useState<string>(() => getInitialState('deliveryLocationLink', ''));
     const [isCartOpen, setCartOpen] = useState(false);
     const [hasAutoOpenedCart, setHasAutoOpenedCart] = useState(false);
 
@@ -107,6 +125,7 @@ export const OrderProvider = ({ children }: { children: ReactNode }) => {
         [items, deliveryZone, deliveryMethod]
     );
     const subtotal = useMemo(() => OrderValidationService.calculateSubtotal(items), [items]);
+    const totalWithShipping = subtotal + validation.shippingCost;
 
     useEffect(() => {
         if (items.length === 0) {
@@ -120,13 +139,31 @@ export const OrderProvider = ({ children }: { children: ReactNode }) => {
         }
     }, [items.length, hasAutoOpenedCart]);
 
+    useEffect(() => {
+        try {
+            if (typeof window !== 'undefined') {
+                const dataToSave = {
+                    items,
+                    deliveryZone,
+                    deliveryMethod,
+                    customerName,
+                    customerPhone,
+                    pickupPoint,
+                    deliveryLocationLink,
+                };
+                localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(dataToSave));
+            }
+        } catch (e) {
+            console.warn('Could not write to localStorage', e);
+        }
+    }, [items, deliveryZone, deliveryMethod, customerName, customerPhone, pickupPoint, deliveryLocationLink]);
+
     const handleSetDeliveryZone = useCallback((zone: DeliveryZone) => {
         setDeliveryZone(zone);
         if (zone === 'cdmx') {
             setDeliveryMethodState('pickup');
         }
         setPickupPoint('');
-        setDeliveryDate(''); // Resetear fecha al cambiar zona (los días habilitados cambian)
     }, []);
 
     const handleSetDeliveryMethod = useCallback((method: DeliveryMethod) => {
@@ -149,7 +186,7 @@ export const OrderProvider = ({ children }: { children: ReactNode }) => {
         validation,
         subtotal,
         shippingCost: validation.shippingCost,
-        totalWithShipping: validation.totalWithShipping,
+        totalWithShipping,
         minimumOrderAmount: validation.minimumOrderAmount,
         freeShippingThreshold: validation.freeShippingThreshold,
         deliveryZone,
@@ -157,7 +194,6 @@ export const OrderProvider = ({ children }: { children: ReactNode }) => {
         customerName,
         customerPhone,
         pickupPoint,
-        deliveryDate,
         deliveryLocationLink,
         isCartOpen,
         setDeliveryZone: handleSetDeliveryZone,
@@ -165,7 +201,6 @@ export const OrderProvider = ({ children }: { children: ReactNode }) => {
         setCustomerName,
         setCustomerPhone,
         setPickupPoint,
-        setDeliveryDate,
         setDeliveryLocationLink,
         setCartOpen,
         addItem,

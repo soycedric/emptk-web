@@ -10,7 +10,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { ShoppingCart, MapPin, Truck, CalendarDays } from 'lucide-react';
 import type { CalculatorDensity } from '@/components/calculator/types';
 import { isCompactDensity } from '@/components/calculator/types';
-import { DeliveryDatePicker } from '@/components/calculator/DeliveryDatePicker';
 import * as turf from '@turf/turf';
 import pueblaZone from '@/data/puebla-zone.json';
 
@@ -23,8 +22,8 @@ const DELIVERY_ZONES: Record<DeliveryZone, string> = {
 };
 
 const CDMX_PICKUP_POINTS = [
-  'Parque Delta (10 am a 2 pm)',
-  'Biblioteca Central UNAM (2 pm a 6 pm)'
+  'Parque Delta',
+  'Biblioteca Central UNAM'
 ];
 
 interface ProductSelectorProps {
@@ -33,7 +32,6 @@ interface ProductSelectorProps {
   customerName: string;
   customerPhone: string;
   pickupPoint: string;
-  deliveryDate: string;
   deliveryLocationLink: string;
   density?: CalculatorDensity;
   onZoneChange: (zone: DeliveryZone) => void;
@@ -41,8 +39,10 @@ interface ProductSelectorProps {
   onCustomerNameChange: (name: string) => void;
   onCustomerPhoneChange: (phone: string) => void;
   onPickupPointChange: (point: string) => void;
-  onDeliveryDateChange: (date: string) => void;
   onDeliveryLocationChange: (location: string) => void;
+  isLocked?: boolean;
+  setIsLocked?: (locked: boolean) => void;
+  canSubmit?: boolean;
 }
 
 export const ProductSelector = ({
@@ -51,7 +51,6 @@ export const ProductSelector = ({
   customerName,
   customerPhone,
   pickupPoint,
-  deliveryDate,
   deliveryLocationLink,
   density = 'default',
   onZoneChange,
@@ -59,8 +58,10 @@ export const ProductSelector = ({
   onCustomerNameChange,
   onCustomerPhoneChange,
   onPickupPointChange,
-  onDeliveryDateChange,
   onDeliveryLocationChange,
+  isLocked = false,
+  setIsLocked,
+  canSubmit = false,
 }: ProductSelectorProps) => {
   const [isLocating, setIsLocating] = useState(false);
   const [locationError, setLocationError] = useState('');
@@ -129,8 +130,8 @@ export const ProductSelector = ({
       <div id="step-city" className={compact ? "space-y-2" : "mb-4 p-3 bg-muted border-2 border-foreground/20"}>
         <div className={compact ? "flex items-center gap-2" : "flex items-center gap-2 mb-2"}>
           <MapPin className="w-4 h-4 text-foreground" />
-          <label className={compact ? "text-[10px] font-display uppercase tracking-wider text-muted-foreground" : "text-xs font-display uppercase tracking-wider text-muted-foreground"}>
-            {compact ? 'Ciudad' : 'Paso 1: Ciudad'}
+          <label className={compact ? "text-[18px] font-display uppercase tracking-wider text-muted-foreground" : "text-xs font-display uppercase tracking-wider text-muted-foreground"}>
+            Ciudad
           </label>
         </div>
         <Select value={deliveryZone} onValueChange={(value) => onZoneChange(value as DeliveryZone)}>
@@ -151,8 +152,8 @@ export const ProductSelector = ({
       <div id="step-method" className={compact ? "space-y-2" : "mb-4 p-3 bg-muted border-2 border-foreground/20"}>
         <div className={compact ? "flex items-center gap-2" : "flex items-center gap-2 mb-2"}>
           <Truck className="w-4 h-4 text-foreground" />
-          <label className={compact ? "text-[10px] font-display uppercase tracking-wider text-muted-foreground" : "text-xs font-display uppercase tracking-wider text-muted-foreground"}>
-            {compact ? 'Entrega' : 'Paso 2: Envio o Pickup'}
+          <label className={compact ? "text-[18px] font-display uppercase tracking-wider text-muted-foreground" : "text-xs font-display uppercase tracking-wider text-muted-foreground"}>
+            Entrega
           </label>
         </div>
         <div className="flex gap-2">
@@ -181,34 +182,13 @@ export const ProductSelector = ({
           </Button>
         </div>
         {deliveryZone === 'cdmx' && (
-          <p className={compact ? "text-[11px] text-muted-foreground" : "text-xs text-muted-foreground mt-2"}>
+          <p className={compact ? "text-[16px] text-muted-foreground" : "text-xs text-muted-foreground mt-2"}>
             En CDMX solo hay pickup. Solo viernes.
           </p>
         )}
       </div>
 
-      {/* Paso 3: Fecha de entrega */}
-      <motion.div
-        key={deliveryZone}
-        initial={{ opacity: 0, height: 0 }}
-        animate={{ opacity: 1, height: 'auto' }}
-        className={compact ? 'space-y-2' : 'mb-4 p-3 bg-foreground/5 border-2 border-foreground/30 rounded'}
-      >
-        <div className={compact ? 'flex items-center gap-2' : 'flex items-center gap-2 mb-2'}>
-          <CalendarDays className="w-4 h-4 text-foreground" />
-          <label className={compact ? 'text-[10px] font-display uppercase tracking-wider text-muted-foreground' : 'text-xs font-display uppercase tracking-wider text-muted-foreground'}>
-            {compact ? 'Fecha' : 'Paso 3: Fecha de entrega'}
-          </label>
-        </div>
-        <DeliveryDatePicker
-          deliveryZone={deliveryZone}
-          value={deliveryDate}
-          onChange={onDeliveryDateChange}
-          density={density}
-        />
-      </motion.div>
-
-      {/* Paso 4: Ubicacion o Pickup */}
+      {/* Paso 3: Ubicacion o Pickup */}
       {deliveryMethod === 'delivery' && (
         <motion.div
           initial={{ opacity: 0, height: 0 }}
@@ -263,9 +243,6 @@ export const ProductSelector = ({
           exit={{ opacity: 0, height: 0 }}
           className={compact ? "space-y-2" : "mb-4 p-3 bg-foreground/5 border-2 border-foreground/30 rounded"}
         >
-          <p className={compact ? "text-[10px] font-display uppercase tracking-wider text-muted-foreground" : "text-xs font-display uppercase tracking-wider text-muted-foreground mb-2"}>
-            {compact ? 'Punto de pickup' : 'Paso 4: Punto de pickup'}
-          </p>
           {deliveryZone === 'cdmx' ? (
             <Select value={pickupPoint} onValueChange={onPickupPointChange}>
               <SelectTrigger id="pickup-point" className="border-2 border-foreground">
@@ -285,13 +262,13 @@ export const ProductSelector = ({
                 href="https://maps.google.com/?q=19.035708082832254,-98.20995033301674"
                 target="_blank"
                 rel="noreferrer"
-                className="text-xs text-muted-foreground underline"
+                className="text-[20px] text-muted-foreground underline"
               >
-                Ver punto de pickup en Puebla
+                Ver punto de pickup
               </a>
             </div>
           )}
-          <p className={compact ? "text-[11px] text-muted-foreground" : "text-xs text-muted-foreground mt-2"}>
+          <p className={compact ? "text-[16px] text-muted-foreground" : "text-xs text-muted-foreground mt-2"}>
             Acordaremos el horario exacto por WhatsApp.
           </p>
         </motion.div>
@@ -299,7 +276,7 @@ export const ProductSelector = ({
 
       {/* Datos de contacto */}
       <div id="step-contact" className={compact ? "space-y-2" : "mb-4 p-3 bg-muted border-2 border-foreground/20"}>
-        <label className={compact ? "text-[10px] font-display uppercase tracking-wider text-muted-foreground" : "text-xs font-display uppercase tracking-wider text-muted-foreground"}>
+        <label className={compact ? "text-[20px] font-display uppercase tracking-wider text-muted-foreground" : "text-xs font-display uppercase tracking-wider text-muted-foreground"}>
           Datos de contacto
         </label>
         <div className={compact ? "grid sm:grid-cols-2 gap-2" : "grid sm:grid-cols-2 gap-3 mt-3"}>
@@ -313,11 +290,37 @@ export const ProductSelector = ({
           <Input
             id="customer-phone"
             value={customerPhone}
-            onChange={(event) => onCustomerPhoneChange(event.target.value)}
+            onChange={(event) => {
+              const numericValue = event.target.value.replace(/\D/g, '');
+              onCustomerPhoneChange(numericValue);
+            }}
             placeholder="Telefono"
+            type="tel"
+            inputMode="numeric"
             className="border-2 border-foreground"
           />
         </div>
+
+        {/* Checkbox de confirmación de datos */}
+        {setIsLocked && (
+          <div className="mt-4 p-3 bg-foreground/5 border-2 border-foreground/20 flex items-start gap-3">
+            <input
+              type="checkbox"
+              id="confirm-data-selector"
+              className="mt-1 w-5 h-5 border-2 border-foreground accent-foreground cursor-pointer disabled:opacity-50"
+              disabled={!canSubmit || isLocked}
+              checked={isLocked}
+              onChange={(e) => {
+                if (e.target.checked) {
+                  setIsLocked(true);
+                }
+              }}
+            />
+            <label htmlFor="confirm-data-selector" className={`text-sm font-display cursor-pointer flex-1 ${!canSubmit ? 'text-muted-foreground' : 'text-foreground'}`}>
+              Confirmo que mis datos son correctos.
+            </label>
+          </div>
+        )}
       </div>
     </div>
   );

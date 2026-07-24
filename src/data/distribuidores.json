@@ -46,5 +46,41 @@
     "type": "supermarket",
     "instagram": "@puro_apapacho",
     "mapUrl": "https://www.google.com/maps/search/?api=1&query=19.2915607,-99.1236048"
+  },
+  {
+    "name": "Corazón Vegano",
+    "address": "15 Sur, 1315, Barrio de Sta Maria Xixitla, San Pedro Cholula, 72762",
+    "city": "Cholula",
+    "state": "Puebla",
+    "region": "puebla",
+    "lat": 19.06239409123364,
+    "lng": -98.32319892360894,
+    "type": "supermarket",
+    "instagram": "@corazonveganomarket",
+    "mapUrl": "https://www.google.com/maps/place/Coraz%C3%B3n+Vegano/@19.062171,-98.3257202,17z"
+  },
+  {
+    "name": "Be Green",
+    "address": "Av. Morillotla 65-local 4, Santiago Momoxpan, Bello Horizonte, 72775",
+    "city": "Cholula",
+    "state": "Puebla",
+    "region": "puebla",
+    "lat": 19.053227950026617,
+    "lng": -98.26903283301633,
+    "type": "supermarket",
+    "instagram": "@begreen.cholula",
+    "mapUrl": "https://www.google.com/maps/place/Be+Green+Cholula/@19.0529643,-98.271597,17z"
+  },
+  {
+    "name": "Vegan Label",
+    "address": "Dr. Barragán 604 A, Narvarte Oriente, Benito Juárez, 03023",
+    "city": "Ciudad de México",
+    "state": "CDMX",
+    "region": "cdmx",
+    "lat": 19.39804411246648,
+    "lng": -99.1471938888292,
+    "type": "supermarket",
+    "instagram": "@veganlabel",
+    "mapUrl": "https://www.google.com/maps/place/Vegan+Label/@19.3975179,-99.1498117,16z"
   }
 ]

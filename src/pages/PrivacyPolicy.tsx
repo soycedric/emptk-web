@@ -83,7 +83,6 @@ const PrivacyPolicy = () => {
                   <li>Comunicación sobre el estado de pedidos y entregas</li>
                   <li>Mejora de nuestros productos y servicios</li>
                   <li>Envío de información sobre nuevos productos (con su consentimiento)</li>
-                  <li>Facturación y gestión de pagos</li>
                 </ul>
               </section>
 
@@ -96,7 +95,6 @@ const PrivacyPolicy = () => {
                 </p>
                 <ul className="list-disc list-inside space-y-2 ml-4">
                   <li>Servicios de mensajería y logística para realizar entregas</li>
-                  <li>Procesadores de pago para transacciones comerciales</li>
                   <li>Autoridades competentes cuando sea requerido por ley</li>
                 </ul>
                 <p className="mt-4">

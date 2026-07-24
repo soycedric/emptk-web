@@ -6,6 +6,7 @@ import SEOHead from "@/components/SEOHead";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import CartSideMenu from "@/components/CartSideMenu";
+import FloatingCart from "@/components/FloatingCart";
 import { OrderProvider } from "@/contexts/OrderContext";
 
 // Lazy load de componentes below-the-fold para reducir bundle inicial
@@ -77,6 +78,7 @@ const Index = () => {
           </main>
           <Footer />
           <CartSideMenu />
+          <FloatingCart />
         </div>
       </OrderProvider>
     </>

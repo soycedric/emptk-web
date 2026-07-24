@@ -23,7 +23,8 @@ const queryClient = new QueryClient({
   },
 });
 
-const App = () => (
+const App = () => {
+  return (
   <HelmetProvider>
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
@@ -42,6 +43,7 @@ const App = () => (
       </TooltipProvider>
     </QueryClientProvider>
   </HelmetProvider>
-);
+  );
+};
 
 export default App;

@@ -4,95 +4,33 @@
  */
 
 import { motion, AnimatePresence } from 'framer-motion';
-import { ShoppingCart, ArrowRight, X } from 'lucide-react';
+import { ShoppingCart } from 'lucide-react';
 import { useOrderContext } from '@/contexts/OrderContext';
 
 const FloatingCart = () => {
-    const {
-        items,
-        subtotal,
-        freeShippingThreshold,
-        deliveryZone,
-        deliveryMethod,
-        validation
-    } = useOrderContext();
+    const { items, setCartOpen, isCartOpen } = useOrderContext();
 
-    if (items.length === 0) return null;
-
-    const fillPercent = freeShippingThreshold > 0
-        ? Math.min(100, (subtotal / freeShippingThreshold) * 100)
-        : 0;
-    const isPickup = deliveryZone === 'cdmx' || deliveryMethod === 'pickup';
-    const statusText = validation.shouldRedirectToDistributors
-        ? 'Proveedores'
-        : isPickup
-            ? 'Pickup'
-            : subtotal >= freeShippingThreshold
-                ? 'Envio gratis'
-                : 'Envio $50';
+    // Si el carrito está abierto o no hay items, lo ocultamos
+    if (items.length === 0 || isCartOpen) return null;
 
     return (
         <AnimatePresence>
-            <motion.div
-                initial={{ y: 100, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                exit={{ y: 100, opacity: 0 }}
+            <motion.button
+                onClick={() => setCartOpen(true)}
+                initial={{ scale: 0, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0, opacity: 0 }}
                 transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-                className="fixed bottom-0 left-0 right-0 z-50 bg-background border-t-4 border-foreground shadow-[0_-4px_20px_rgba(0,0,0,0.15)]"
+                className="fixed bottom-6 right-6 z-50 w-16 h-16 bg-foreground text-background rounded-full shadow-brutal flex items-center justify-center transition-all hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-brutal-lg border-2 border-background"
+                aria-label="Abrir carrito"
             >
-                <div className="container mx-auto px-4 py-3">
-                    <div className="flex items-center justify-between gap-4">
-                        {/* Left: Cart info */}
-                        <div className="flex items-center gap-3 min-w-0">
-                            <div className="relative">
-                                <ShoppingCart className="w-6 h-6" />
-                                <span className="absolute -top-2 -right-2 bg-foreground text-background text-[10px] font-display w-5 h-5 flex items-center justify-center border border-background">
-                                    {items.length}
-                                </span>
-                            </div>
-                            <div className="min-w-0">
-                                <p className="font-display text-sm truncate">
-                                    ${subtotal.toFixed(0)}
-                                </p>
-                                <p className="font-body text-[10px] text-muted-foreground truncate">
-                                    {statusText}
-                                </p>
-                            </div>
-                        </div>
-
-                        {/* Center: Progress bar (hidden on very small screens) */}
-                        <div className="hidden sm:flex flex-1 max-w-xs items-center gap-2">
-                            <div className="flex-1 h-3 bg-muted border-2 border-foreground overflow-hidden">
-                                <motion.div
-                                    className={`h-full ${validation.isValid
-                                            ? 'bg-green-500'
-                                            : fillPercent > 60
-                                                ? 'bg-amber-500'
-                                                : 'bg-red-500'
-                                        }`}
-                                    animate={{ width: `${fillPercent}%` }}
-                                    transition={{ duration: 0.3 }}
-                                />
-                            </div>
-                            <span className="font-display text-xs whitespace-nowrap">
-                                {Math.round(fillPercent)}%
-                            </span>
-                        </div>
-
-                        {/* Right: CTA */}
-                        <a
-                            href="#calculadora"
-                            className={`inline-flex items-center gap-2 px-5 py-2.5 font-display text-sm uppercase border-[3px] border-foreground shadow-brutal transition-all duration-150 hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-brutal-lg whitespace-nowrap ${validation.isValid
-                                    ? 'bg-green-500 text-white'
-                                    : 'bg-foreground text-background'
-                                }`}
-                        >
-                            {validation.isValid ? 'Enviar pedido' : 'Ver pedido'}
-                            <ArrowRight className="w-4 h-4" />
-                        </a>
-                    </div>
+                <div className="relative">
+                    <ShoppingCart className="w-7 h-7" />
+                    <span className="absolute -top-3 -right-3 bg-red-600 text-white text-[12px] font-bold w-6 h-6 flex items-center justify-center rounded-full border-2 border-background shadow-sm">
+                        {items.length}
+                    </span>
                 </div>
-            </motion.div>
+            </motion.button>
         </AnimatePresence>
     );
 };
